@@ -4,7 +4,7 @@ export async function getAppData(seasonYear?: number, weekId?: string) {
   const session = await readSession(); if (!session) return null; const db = getSupabaseAdmin();
   const { data: user } = await db.from('users').select('id,nickname,avatar_url,is_admin,status').eq('id', session.userId).single(); if (!user || user.status !== 'active') return null;
   const { data: seasons } = await db.from('seasons').select('*').order('year', { ascending: false }); const season = seasons?.find(s => s.year === seasonYear) || seasons?.[0];
-  if (!season) return { user, seasons: [], week: null, games: [], picks: [], players: [], tiebreakers: [], weekly: [], seasonStandings: [] };
+  if (!season) return { user, seasons: [], season: null, weeks: [], week: null, games: [], picks: [], players: [], tiebreakers: [], weekly: [], seasonStandings: [] };
   const { data: weeks } = await db.from('weeks').select('*').eq('season_id', season.id).order('first_kickoff'); const now = Date.now();
   const overridden = weeks?.find(w => w.is_active_override); const automatic = weeks?.find(w => Date.parse(w.last_kickoff) >= now) || weeks?.at(-1); const week = weeks?.find(w => w.id === weekId) || overridden || automatic;
   if (!week) return { user, seasons, season, weeks, week: null, games: [], picks: [], players: [], tiebreakers: [], weekly: [], seasonStandings: [] };
