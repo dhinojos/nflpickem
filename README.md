@@ -76,7 +76,7 @@ Un usuario necesita `is_admin = true` y el `ADMIN_PIN`. Puede agregar correos, s
 - El desempate se puede editar y permanece privado hasta el kickoff del último partido.
 - Gana la semana quien tenga más aciertos; entre iguales, la menor diferencia absoluta del desempate. Si persiste el empate, todos ganan la semana.
 - La temporada se ordena por aciertos y luego victorias semanales; un empate restante comparte rango.
-- La pretemporada tiene tabla semanal, pero no aporta aciertos ni victorias a la clasificación de temporada. Temporada regular y todos los playoffs sí cuentan.
+- Cada temporada incluye la temporada regular y todos los playoffs, incluido el Super Bowl.
 
 ## Problemas comunes
 

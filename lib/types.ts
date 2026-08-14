@@ -1,4 +1,4 @@
-export type WeekType = 'preseason' | 'regular' | 'wildcard' | 'divisional' | 'conference' | 'superbowl';
+export type WeekType = 'regular' | 'wildcard' | 'divisional' | 'conference' | 'superbowl';
 export type GameStatus = 'scheduled' | 'in_progress' | 'final' | 'canceled';
 export type UserStatus = 'active' | 'disabled';
 

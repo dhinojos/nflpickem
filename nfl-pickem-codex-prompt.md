@@ -261,30 +261,7 @@ Sincronizar temporada
 
 ---
 
-# Preseason Rules
-
-Preseason exists primarily to test the application before the regular season.
-
-Preseason games:
-
-- Allow normal picks
-- Have weekly scoreboards
-- Can declare weekly winners for display purposes if desired
-
-BUT preseason MUST NOT contribute to official season standings.
-
-Specifically preseason contributes:
-
-```text
-0 season points
-0 season weekly wins
-```
-
-The season leaderboard must exclude all preseason results.
-
----
-
-# Regular/Postseason Rules
+# Season Rules
 
 All of these count toward season standings:
 
@@ -294,7 +271,7 @@ All of these count toward season standings:
 - Conference Championships
 - Super Bowl
 
-Everything after preseason counts.
+Preseason games are not imported or shown.
 
 ---
 
@@ -1516,7 +1493,7 @@ Summarize Pick'em rules.
 
 ## Season Rules
 
-Explain preseason versus official season.
+Explain that each season includes regular season and postseason games.
 
 ## Troubleshooting
 
@@ -1718,12 +1695,11 @@ The application is complete when I can:
 18. See the weekly leaderboard.
 19. See weekly winner(s).
 20. See season standings.
-21. Confirm preseason does not affect season standings.
-22. See regular season + playoffs + Super Bowl contribute to the season.
-23. Browse previous weeks.
-24. Browse historical seasons.
-25. Manage users and synchronization through Admin.
-26. Repeat the application for future NFL seasons without resetting the database.
+21. See regular season + playoffs + Super Bowl contribute to the season.
+22. Browse previous weeks.
+23. Browse historical seasons.
+24. Manage users and synchronization through Admin.
+25. Repeat the application for future NFL seasons without resetting the database.
 
 ---
 
