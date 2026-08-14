@@ -6,7 +6,9 @@ export async function getAppData(seasonYear?: number, weekId?: string) {
   const { data: seasons } = await db.from('seasons').select('*').order('year', { ascending: false }); const season = seasons?.find(s => s.year === seasonYear) || seasons?.[0];
   if (!season) return { user, seasons: [], season: null, weeks: [], week: null, games: [], picks: [], players: [], tiebreakers: [], weekly: [], seasonStandings: [] };
   const { data: weeks } = await db.from('weeks').select('*').eq('season_id', season.id).order('first_kickoff'); const now = Date.now();
-  const overridden = weeks?.find(w => w.is_active_override); const automatic = weeks?.find(w => Date.parse(w.last_kickoff) >= now) || weeks?.at(-1); const week = weeks?.find(w => w.id === weekId) || overridden || automatic;
+  const current = weeks?.find(w => Date.parse(w.first_kickoff) <= now && Date.parse(w.last_kickoff) >= now);
+  const upcoming = weeks?.find(w => Date.parse(w.first_kickoff) > now);
+  const week = weeks?.find(w => w.id === weekId) || current || upcoming || weeks?.at(-1);
   if (!week) return { user, seasons, season, weeks, week: null, games: [], picks: [], players: [], tiebreakers: [], weekly: [], seasonStandings: [] };
   const [{ data: games }, { data: players }, { data: allPicks }, { data: allTies }] = await Promise.all([
     db.from('games').select('*').eq('week_id', week.id).order('kickoff_at'), db.from('users').select('id,nickname,avatar_url').not('nickname','is',null).order('nickname'), db.from('picks').select('*').in('game_id', (await db.from('games').select('id').eq('week_id', week.id)).data?.map(g=>g.id)||[]), db.from('tiebreakers').select('*').eq('week_id', week.id)
