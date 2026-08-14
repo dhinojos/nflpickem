@@ -1,0 +1,2 @@
+import { NextResponse } from 'next/server'; import { syncSeason } from '@/lib/nfl/sync';
+export async function GET(request:Request){if(request.headers.get('authorization')!==`Bearer ${process.env.CRON_SECRET}`)return NextResponse.json({error:'No autorizado'},{status:401});try{return NextResponse.json(await syncSeason());}catch(e){console.error(e);return NextResponse.json({error:'Error de sincronización'},{status:500});}}

@@ -1,0 +1,2 @@
+import { NextResponse } from 'next/server'; import { getAppData } from '@/lib/app-data';
+export async function GET(request: Request) { const u = new URL(request.url); try { const data = await getAppData(u.searchParams.get('season') ? Number(u.searchParams.get('season')) : undefined, u.searchParams.get('week') || undefined); return data ? NextResponse.json(data) : NextResponse.json({ error:'Sesión no válida.' },{status:401}); } catch { return NextResponse.json({ error:'No pudimos cargar la aplicación.' },{status:500}); } }
