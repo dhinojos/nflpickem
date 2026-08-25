@@ -1,9 +1,9 @@
 import { getSupabaseAdmin } from './supabase'; import { readSession } from './session'; import { canViewOtherTeamPicks, canViewOtherTiebreakers, calculatePickResult, calculateTiebreakerDifference, markWeeklyWinners, rankSeason } from './domain'; import type { WeeklyStanding } from './types';
 
-export async function getAppData(seasonYear?: number, weekId?: string) {
+export async function getAppData(seasonId?: string, weekId?: string) {
   const session = await readSession(); if (!session) return null; const db = getSupabaseAdmin();
   const { data: user } = await db.from('users').select('id,nickname,avatar_url,is_admin,status').eq('id', session.userId).single(); if (!user || user.status !== 'active') return null;
-  const { data: seasons } = await db.from('seasons').select('*').order('year', { ascending: false }); const season = seasons?.find(s => s.year === seasonYear) || seasons?.[0];
+  const { data: seasons } = await db.from('seasons').select('*').order('year', { ascending: false }).order('created_at', { ascending: false }); const season = seasons?.find(s => s.id === seasonId) || seasons?.find(s => s.is_active) || seasons?.[0];
   if (!season) return { user, seasons: [], season: null, weeks: [], week: null, games: [], picks: [], players: [], tiebreakers: [], weekly: [], seasonStandings: [] };
   const { data: weeks } = await db.from('weeks').select('*').eq('season_id', season.id).order('first_kickoff'); const now = Date.now();
   const current = weeks?.find(w => Date.parse(w.first_kickoff) <= now && Date.parse(w.last_kickoff) >= now);
@@ -13,8 +13,8 @@ export async function getAppData(seasonYear?: number, weekId?: string) {
   const [{ data: games }, { data: players }, { data: allPicks }, { data: allTies }] = await Promise.all([
     db.from('games').select('*').eq('week_id', week.id).order('kickoff_at'), db.from('users').select('id,nickname,avatar_url').not('nickname','is',null).order('nickname'), db.from('picks').select('*').in('game_id', (await db.from('games').select('id').eq('week_id', week.id)).data?.map(g=>g.id)||[]), db.from('tiebreakers').select('*').eq('week_id', week.id)
   ]);
-  const publicPicks = canViewOtherTeamPicks(week) ? allPicks : allPicks?.filter(p => p.user_id === user.id);
-  const publicTies = canViewOtherTiebreakers(week) ? allTies : allTies?.filter(t => t.user_id === user.id);
+  const publicPicks = user.is_admin || canViewOtherTeamPicks(week) ? allPicks : allPicks?.filter(p => p.user_id === user.id);
+  const publicTies = user.is_admin || canViewOtherTiebreakers(week) ? allTies : allTies?.filter(t => t.user_id === user.id);
   const tieGame = games?.find(g => g.id === week.tiebreaker_game_id); const actual = tieGame?.status === 'final' && tieGame.home_score != null && tieGame.away_score != null ? tieGame.home_score + tieGame.away_score : null;
   const weekly: WeeklyStanding[] = (players || []).map(p => { const pp = (allPicks || []).filter(x => x.user_id === p.id); const results = (games || []).map(g => calculatePickResult(g, pp.find(x => x.game_id === g.id)?.selected_team)); const pred = allTies?.find(t => t.user_id === p.id)?.prediction ?? null; return { userId:p.id,nickname:p.nickname,avatarUrl:p.avatar_url,correct:results.filter(x=>x===1).length,incorrect:results.filter(x=>x===0).length,pending:results.filter(x=>x===null).length,prediction:pred,difference:calculateTiebreakerDifference(pred,actual),winner:false }; });
   const marked = games?.every(g => ['final','canceled'].includes(g.status)) ? markWeeklyWinners(weekly) : weekly;
