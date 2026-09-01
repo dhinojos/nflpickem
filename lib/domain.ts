@@ -24,7 +24,8 @@ export function rankSeason(rows: SeasonStanding[]) {
   const sorted = [...rows].sort((a, b) => b.correct - a.correct || b.weeklyWins - a.weeklyWins || a.nickname.localeCompare(b.nickname));
   let rank = 0;
   return sorted.map((row, i) => {
-    if (i === 0 || row.correct !== sorted[i - 1].correct || row.weeklyWins !== sorted[i - 1].weeklyWins) rank = i + 1;
+    if (i === 0) rank = 1;
+    else if (row.correct !== sorted[i - 1].correct || row.weeklyWins !== sorted[i - 1].weeklyWins) rank++;
     return { ...row, rank };
   });
 }
