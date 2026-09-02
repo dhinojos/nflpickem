@@ -10,6 +10,8 @@ export async function syncSeason({ seasonId, year, weekTypes }: { seasonId?: str
   if (!season) throw new Error('No se encontró la temporada.');
   const selectedWeekTypes = weekTypes || season.week_types || ['regular','wildcard','divisional','conference','superbowl'];
   const providerGames = await provider.getGames(seasonYear, selectedWeekTypes); const groups = new Map<string, typeof providerGames>();
+  const postseasonTypes = selectedWeekTypes.filter((type: WeekType) => ['wildcard','divisional','conference','superbowl'].includes(type));
+  if (postseasonTypes.length) await db.from('weeks').delete().eq('season_id', season.id).in('week_type', postseasonTypes).lt('first_kickoff', `${seasonYear + 1}-01-01T00:00:00Z`);
   providerGames.forEach(g => { const key = `${g.weekType}-${g.week}`; groups.set(key, [...(groups.get(key) || []), g]); });
   let count = 0;
   for (const games of groups.values()) {

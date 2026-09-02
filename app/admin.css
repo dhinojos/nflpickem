@@ -2,4 +2,6 @@
 .participant-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}.participant-list li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}.participant-list small{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.participant-list b{font-size:11px;color:var(--blue);text-transform:uppercase}
 .profile-upload{width:100%;border:1px dashed #8ca3c4;background:#f8faff;color:var(--blue)}
 .pick-save{margin:22px 0 14px;text-align:center}.pick-save p{margin:14px 8px 0;padding:13px 16px;border-left:4px solid var(--green);background:#e6f7ef;color:#07543d;font-size:13px;font-weight:700;line-height:1.5;text-align:left}.pick-save small{display:block;margin-top:4px;color:var(--green);font-weight:800}
+.pick-save p.pick-confirmation{margin-bottom:-5px;font-weight:900}
 .grid-card b.pick-correct{color:#087f5b}.grid-card b.pick-incorrect{color:#c21d2d}
+.standing strong{display:flex;align-items:center;gap:5px}.standing strong .gold{flex:none}
