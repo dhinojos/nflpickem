@@ -35,3 +35,13 @@ export function winnerForGame(game: Pick<Game, 'status' | 'home_score' | 'away_s
   if (game.home_score === game.away_score) return 'tie';
   return game.home_score > game.away_score ? game.home_team : game.away_team;
 }
+
+export function calculateWeeklyWinStatuses(rows: WeeklyStanding[], games: Game[]) {
+  const remainingGames = games.filter(game => !['final', 'canceled'].includes(game.status)).length;
+  const currentLeader = Math.max(...rows.map(row => row.correct), 0);
+  return new Map(rows.map(row => {
+    if (remainingGames === 0) return [row.userId, row.correct === currentLeader && rows.filter(other => other.correct === currentLeader).length > 1 ? 'tiebreaker' : 'finished'] as const;
+    const maximum = row.correct + remainingGames;
+    return [row.userId, maximum > currentLeader ? 'can_win' : maximum === currentLeader ? 'tiebreaker' : 'finished'] as const;
+  }));
+}
