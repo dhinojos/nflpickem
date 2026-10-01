@@ -7,5 +7,5 @@ export interface Game { id: string; external_id: string; week_id: string; home_t
 export interface Pick { user_id: string; game_id: string; selected_team: string; }
 export interface Player { id: string; nickname: string; avatar_url: string | null; }
 export type WeeklyWinStatus = 'can_win' | 'tiebreaker' | 'finished';
-export interface WeeklyStanding { userId: string; nickname: string; avatarUrl?: string | null; correct: number; incorrect: number; pending: number; prediction: number | null; difference: number | null; winner: boolean; winStatus?: WeeklyWinStatus; }
+export interface WeeklyStanding { userId: string; nickname: string; avatarUrl?: string | null; correct: number; incorrect: number; pending: number; missing?: number; prediction: number | null; difference: number | null; winner: boolean; winStatus?: WeeklyWinStatus; }
 export interface SeasonStanding { userId: string; nickname: string; avatarUrl?: string | null; correct: number; weeklyWins: number; rank?: number; }

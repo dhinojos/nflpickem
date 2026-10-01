@@ -36,12 +36,22 @@ export function winnerForGame(game: Pick<Game, 'status' | 'home_score' | 'away_s
   return game.home_score > game.away_score ? game.home_team : game.away_team;
 }
 
-export function calculateWeeklyWinStatuses(rows: WeeklyStanding[], games: Game[]) {
-  const remainingGames = games.filter(game => !['final', 'canceled'].includes(game.status)).length;
+export function calculateWeeklyWinStatuses(rows: WeeklyStanding[], games: Game[], picks: Array<{ user_id: string; game_id: string; selected_team: string | null }> = []) {
+  const remainingGames = games.filter(game => !['final', 'canceled'].includes(game.status));
   const currentLeader = Math.max(...rows.map(row => row.correct), 0);
+  const leaders = rows.filter(row => row.correct === currentLeader);
+  const pickFor = (userId: string, gameId: string) => picks.find(pick => pick.user_id === userId && pick.game_id === gameId)?.selected_team || null;
+  const maximumLeadOver = (row: WeeklyStanding, leader: WeeklyStanding) => remainingGames.reduce((gain, game) => {
+    const rowPick = pickFor(row.userId, game.id);
+    const leaderPick = pickFor(leader.userId, game.id);
+    return gain + Number(!!rowPick && rowPick !== leaderPick);
+  }, 0);
+
   return new Map(rows.map(row => {
-    if (remainingGames === 0) return [row.userId, row.correct === currentLeader && rows.filter(other => other.correct === currentLeader).length > 1 ? 'tiebreaker' : 'finished'] as const;
-    const maximum = row.correct + remainingGames;
-    return [row.userId, maximum > currentLeader ? 'can_win' : maximum === currentLeader ? 'tiebreaker' : 'finished'] as const;
+    if (remainingGames.length === 0) return [row.userId, row.correct === currentLeader && leaders.length > 1 ? 'tiebreaker' : 'finished'] as const;
+    const opponents = leaders.filter(leader => leader.userId !== row.userId);
+    if (!opponents.length) return [row.userId, 'can_win'] as const;
+    const bestPossibleMargin = Math.min(...opponents.map(leader => row.correct + maximumLeadOver(row, leader) - leader.correct));
+    return [row.userId, bestPossibleMargin > 0 ? 'can_win' : bestPossibleMargin === 0 ? 'tiebreaker' : 'finished'] as const;
   }));
 }
