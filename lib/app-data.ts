@@ -1,4 +1,17 @@
-import { getSupabaseAdmin } from './supabase'; import { readSession } from './session'; import { canViewOtherTeamPicks, canViewOtherTiebreakers, calculatePickResult, calculateTiebreakerDifference, calculateWeeklyWinStatuses, markWeeklyWinners, rankSeason } from './domain'; import type { WeeklyStanding } from './types';
+import { getSupabaseAdmin } from './supabase'; import { readSession } from './session'; import { canViewOtherTeamPicks, canViewOtherTiebreakers, calculatePickResult, calculateTiebreakerDifference, calculateWeeklyWinStatuses, markWeeklyWinners, rankSeason } from './domain'; import type { Game, Pick, WeeklyStanding } from './types';
+
+const SUPABASE_PAGE_SIZE = 1000;
+type Tiebreaker = { user_id: string; week_id: string; prediction: number };
+
+async function fetchAll<T>(createQuery: () => any): Promise<T[]> {
+  const rows: T[] = [];
+  for (let from = 0; ; from += SUPABASE_PAGE_SIZE) {
+    const { data, error } = await createQuery().range(from, from + SUPABASE_PAGE_SIZE - 1);
+    if (error) throw error;
+    rows.push(...((data || []) as T[]));
+    if (!data || data.length < SUPABASE_PAGE_SIZE) return rows;
+  }
+}
 
 export async function getAppData(seasonId?: string, weekId?: string) {
   const session = await readSession(); if (!session) return null; const db = getSupabaseAdmin();
@@ -22,7 +35,10 @@ export async function getAppData(seasonId?: string, weekId?: string) {
   const winStatuses = calculateWeeklyWinStatuses(marked, games || [], allPicks || []);
   const withStatuses = marked.map(row => ({ ...row, winStatus: winStatuses.get(row.userId) }));
   const publicWeekly = user.is_admin || canViewOtherTeamPicks(week) ? withStatuses : withStatuses.map(row => row.userId === user.id ? row : { ...row, prediction: null, difference: null });
-  const seasonWeeks = weeks || []; const { data: seasonGames } = await db.from('games').select('*').in('week_id', seasonWeeks.map(w=>w.id)); const { data: seasonPicks } = await db.from('picks').select('*').in('game_id',(seasonGames||[]).map(g=>g.id)); const { data: seasonTies } = await db.from('tiebreakers').select('*').in('week_id',seasonWeeks.map(w=>w.id));
+  const seasonWeeks = weeks || [];
+  const seasonGames = await fetchAll<Game>(() => db.from('games').select('*').in('week_id', seasonWeeks.map(w => w.id)));
+  const seasonPicks = await fetchAll<Pick>(() => db.from('picks').select('*').in('game_id', seasonGames.map(g => g.id)));
+  const seasonTies = await fetchAll<Tiebreaker>(() => db.from('tiebreakers').select('*').in('week_id', seasonWeeks.map(w => w.id)));
   const weeklyWins=new Map<string,number>(); const weekScores=new Map<string, any[]>();
   for(const sw of seasonWeeks){
     if(sw.week_type==='preseason')continue;
