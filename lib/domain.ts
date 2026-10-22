@@ -2,7 +2,7 @@ import type { Game, SeasonStanding, Week, WeeklyStanding } from './types';
 
 export const canEditTeamPicks = (week: Pick<Week, 'first_kickoff' | 'manually_locked'>, now = new Date()) => !week.manually_locked && now.getTime() < new Date(week.first_kickoff).getTime();
 export const canViewOtherTeamPicks = (week: Pick<Week, 'first_kickoff'>, now = new Date()) => now.getTime() >= new Date(week.first_kickoff).getTime();
-export const canEditTiebreaker = (week: Pick<Week, 'last_kickoff'>, now = new Date()) => now.getTime() < new Date(week.last_kickoff).getTime();
+export const canEditTiebreaker = (sundayNightGame: Pick<Game, 'status'> | null | undefined, mondayNightGame: Pick<Game, 'kickoff_at'> | null | undefined, now = new Date()) => !!sundayNightGame && !!mondayNightGame && sundayNightGame.status === 'final' && now.getTime() < new Date(mondayNightGame.kickoff_at).getTime();
 export const canViewOtherTiebreakers = (week: Pick<Week, 'last_kickoff'>, now = new Date()) => now.getTime() >= new Date(week.last_kickoff).getTime();
 
 export function calculatePickResult(game: Pick<Game, 'status' | 'winner'>, selectedTeam?: string | null) {

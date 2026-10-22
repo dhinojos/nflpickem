@@ -2,6 +2,28 @@ import { getSupabaseAdmin } from './supabase'; import { readSession } from './se
 
 const SUPABASE_PAGE_SIZE = 1000;
 type Tiebreaker = { user_id: string; week_id: string; prediction: number };
+const APP_TIME_ZONE = 'America/Chihuahua';
+
+function startOfNextLocalDay(instant: string) {
+  const date = new Date(instant);
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: APP_TIME_ZONE,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  const nextDayUtc = Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day) + 1);
+  const localClock = new Intl.DateTimeFormat('en-US', {
+    timeZone: APP_TIME_ZONE,
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+  });
+  let candidate = nextDayUtc;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const localParts = Object.fromEntries(localClock.formatToParts(new Date(candidate)).map(part => [part.type, part.value]));
+    const localAsUtc = Date.UTC(Number(localParts.year), Number(localParts.month) - 1, Number(localParts.day), Number(localParts.hour), Number(localParts.minute), Number(localParts.second));
+    candidate += nextDayUtc - localAsUtc;
+  }
+  return candidate;
+}
 
 async function fetchAll<T>(createQuery: () => any): Promise<T[]> {
   const rows: T[] = [];
@@ -20,7 +42,7 @@ export async function getAppData(seasonId?: string, weekId?: string) {
   const { data: seasons } = await db.from('seasons').select('*').order('year', { ascending: false }).order('created_at', { ascending: false }); const season = seasons?.find(s => s.id === seasonId) || seasons?.find(s => s.is_active) || seasons?.[0];
   if (!season) return { user, seasons: [], season: null, weeks: [], week: null, games: [], picks: [], players: [], tiebreakers: [], weekly: [], seasonStandings: [], adminUsers };
   const { data: weeks } = await db.from('weeks').select('*').eq('season_id', season.id).order('first_kickoff'); const now = Date.now();
-  const current = weeks?.find(w => Date.parse(w.first_kickoff) <= now && Date.parse(w.last_kickoff) >= now);
+  const current = weeks?.find(w => Date.parse(w.first_kickoff) <= now && startOfNextLocalDay(w.last_kickoff) > now);
   const upcoming = weeks?.find(w => Date.parse(w.first_kickoff) > now);
   const week = weeks?.find(w => w.id === weekId) || current || upcoming || weeks?.at(-1);
   if (!week) return { user, seasons, season, weeks, week: null, games: [], picks: [], players: [], tiebreakers: [], weekly: [], seasonStandings: [], adminUsers };
