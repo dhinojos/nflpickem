@@ -49,6 +49,16 @@ export function calculateWeeklyWinStatuses(rows: WeeklyStanding[], games: Game[]
 
   return new Map(rows.map(row => {
     if (remainingGames.length === 0) return [row.userId, row.correct === currentLeader && leaders.length > 1 ? 'tiebreaker' : 'finished'] as const;
+    // A sole current leader also needs a tiebreaker when a trailing player can
+    // catch them by taking every remaining game on which their picks differ.
+    if (row.correct === currentLeader && leaders.length === 1) {
+      const canOnlyTie = rows.some(challenger => {
+        if (challenger.userId === row.userId) return false;
+        const bestPossibleMargin = challenger.correct + maximumLeadOver(challenger, row) - row.correct;
+        return bestPossibleMargin === 0;
+      });
+      if (canOnlyTie) return [row.userId, 'tiebreaker'] as const;
+    }
     const opponents = leaders.filter(leader => leader.userId !== row.userId);
     if (!opponents.length) return [row.userId, 'can_win'] as const;
     const bestPossibleMargin = Math.min(...opponents.map(leader => row.correct + maximumLeadOver(row, leader) - leader.correct));
